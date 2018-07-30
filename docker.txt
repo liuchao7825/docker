@@ -1,0 +1,26 @@
+1.rootfs 			内核空间是kernel，linux刚启动时会加载bootfs文件系统，之后bootfs会被卸载掉。用户空间的我呢加系统时roofts，包含我们熟悉的/dev，/proc,/bin等，目录。
+	对base镜像来说，底层直接用Host的kernel，自己只需要提供roofts就行了。注：容器只能使用Host的kernel。
+3.通过Dockerfile构建镜像的过程
+	1.从base镜像运行一个容器
+	2.执行一条指令，对容器做修改。
+	3.执行类似dockers commit 的操作；，生成一个新的镜像层
+	4.Docker 再基于干干提交的镜像卞一个新容器
+	5.重复2-4步，知道Dockerfile中的所有指令执行完毕。
+	
+	dockerfile常用命令	
+	FROM  指定base镜像
+	MAINTAINER 	设置进行的作者，可以说任意字符串。
+	COPY		将文件从build  context 复制到镜像
+				两种格式： COPY  src  dest
+							 COPY ["src","dest"]
+	ADD			与COPY相似，成build context 复制文件到镜像。不同的时，如果src时归档文件（tar,zip,tgz,xz等），文件会被自动解压到dest。
+	ENV			设置环境变量，环境变量可悲后面的只能怪使用。
+	EXPOSE		指定容器中的进销存会及那天某个端口，Docker可以将该端口暴露出来。
+	VOLUME		将文件或目录声明为volume。
+	EORKRE		为后面的RUN,CMD,ENTRYPOINT,ADD或COPY指令设置镜像中的当前工作目录。
+	RUN			再容器中运行指定的命令
+	CMD			容器启动时运行指定的命令
+				可以写多个CMD命令，大致有最后一个生效
+	ENTRYOPOINT	设置容器启动时运行制定的命令
+	
+	

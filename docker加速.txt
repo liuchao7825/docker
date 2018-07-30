@@ -1,0 +1,8 @@
+由于Docker hub  服务器在国外，在在镜像会较慢。DaoCloud为我们提供免费的国内镜像服务。
+镜像加速步骤
+	1.在daocloud.io（https://hub.daocloud.io/） 免费注册一个用户（我这里使用的是github账号）
+	2.点击界面的加速器即可看到加速的具体方法。
+		如果报错  编辑 /etc/sysconfig/docker 文件
+		修改PTIONS='--selinux-enabled --log-driver=journald --registry-mirror=http://e6d86586.m.daocloud.io'
+
+	3. 重启docker服务

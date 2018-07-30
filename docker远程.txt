@@ -1,0 +1,14 @@
+1.docker  下载不了镜像，检查本机的时间是否正确
+		时间同步命令：ntpdate cn.pool.ntp.org
+		
+2.出现报错  getsockopt: no route to host  检查是否是防火墙的问题
+
+在client 端的docker主机上   修改  docker.service 文件（find / -name docker.service）/usr/lib/systemd/system/docker.service
+		在 "ExecStart=" 选项中加一行参数 "   -H tcp://0.0.0.0:4008  -H unix:///var/run/docker.sock  即可通过4008端口远程控制该主机上的docker服务
+	最新版 是修改/usr/bin/daemon.json文件
+			{
+			"inseure-registries":["0.0.0.0/0"],
+			"hosts":["unix://var/run/docker.sock", "tcp://0.0.0.0:端口"],
+			"graph":"/data/docker"
+			}
+		

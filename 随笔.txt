@@ -1,0 +1,2 @@
+1.docker  镜像文件  （find / -name  sha256，进入该目录后查找镜像id），可以查看配置， 使用python工具 cat file.json|python -m json.tool  可以格式化输出。
+
