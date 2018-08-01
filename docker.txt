@@ -22,5 +22,43 @@
 	CMD			容器启动时运行指定的命令
 				可以写多个CMD命令，大致有最后一个生效
 	ENTRYOPOINT	设置容器启动时运行制定的命令
-	
-	
+3.用dockerHub存取镜像（公网）
+		1.首先注册一个账号 （liuchao1994, Lc185******24）
+		2.在docker hose上登陆
+			docker login -u liuchao1994
+			
+		3.修改镜像的repositiry使之与docker hub账号匹配，完整格式为[username]/xxx:tag
+			docker tag nginx  liuchao1994/nginx:1
+		4.通过docker push 将镜像上传到Docker Hub
+			docker push liuchao1994/nginx:1
+		5.在其他docker host上登陆docker hub  即可下载私有库镜像
+4.docker 常用子命令：
+		images		显示镜像列表
+		history		显示镜像构建历史
+		commit		从容器创建新镜像
+		build		从Dockerfile 构建进行
+		tag			给镜像打tag
+		pull		
+		push
+		rmi			删除host中的镜像，不会删除registry的镜像，如果一个进行对应了多个tag，只有最后一个tag被删除时，进行才被真正的删除。
+		search		在命令行中就可以搜索DockerHub中的镜像
+5.docker exec -it  ID  bash
+  docker logs  -f   ID
+6.docker 参数  	--restart=always 意味着无论容器因何种原因退出（包括正常退出），就立即重启
+				pause      	docker pause ID  暂停容器
+				unpause		docker unpause  ID  退出暂停状态
+				kill       	快速停止，可以用start启动kill掉的容器
+				docker rm  ID1  ID2    删除容器（批量删除：docker rm -v $(docker ps -aq -f status=exited)）
+7.内存限额
+		-m或--memory  设置内存的使用xiane
+		--memory-swap  设置内存+swap的使用限额
+	例子：  docker  run -m 	200M --memory-swap=300M  ubuntu
+			允许容器最多使用200M内存和100Mswap。默认情况下，上面两组参数为-1，即对容器内存和swap的使用没有显示	
+			
+			docker run -it -m 200M --memory-swap=300M  progrium/stress  --vm-bytes  280M 
+						--vm 1 ：启动一个内存工作线程
+						--vm-bytes 280M:每个线程分配280M内存。
+			
+		如果在启动容器时只知定-m而不指定--memory-swap，那么--memory-swap默认为-m的两倍，比如
+			docker run -it -m 200M ubuntu    容器最多使用200M物理内存和200Mswap
+		
