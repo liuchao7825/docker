@@ -61,4 +61,72 @@
 			
 		如果在启动容器时只知定-m而不指定--memory-swap，那么--memory-swap默认为-m的两倍，比如
 			docker run -it -m 200M ubuntu    容器最多使用200M物理内存和200Mswap
-		
+8.CPU设置
+	默认情况下，所有容器可以平等的使用host'CPU资源并且没有限制。
+	Docker可以通过-c 或--cpu-share设置容器使用CPU的权重。如果不指定，默认值为1024。
+	这里通过-c设置的cpu share并不是CPU资源的绝对数量，而是一个相对绝对的权重值。
+	例如：
+		docker run --name  "coutainer_a" -c 1024 ubuntu
+		docker run --name  "coutainer_b" -c 512 ubuntu
+		coutainer_a的cpu  share是coutainer_b的两倍。当两个容器都需要CPU资源时，ａ可以得到的CPU是ｂ的两倍。但如果ａ处于空闲状态，这时，ｂ也可以分配到全部可用的CPU。
+9.block IO 权重
+	block IO指的是磁盘的读写，通过这只权重、显示bps(比特率)和iops（每秒读写次数）的方式控制容器读写磁盘的带宽。
+	通过设置--blkio-weight参数来改变容器block IO的优先级。  这里设置的是权重
+	设置bps和iops  
+		bps是byte per second 每秒读写的数量
+		iops是io per second，每秒IO的次数
+	可以通过以下参数控制容器的bps和iops：
+		--device-read-bps,限制读某个设备的bps
+		--device-write-bps,显示写某个设备的bps
+		--device-read-iops,限制读某个设备的iops
+		--device-write-iops,限制写某个设备的iops
+	例子: docker run -it --device-write-bps /dev/sda:30MB  ubuntu
+10.cgroup和namespace是最重要的两种技术。cgroup实验资源限额，namespace实现资源隔离。
+	cgroup全称control group。Linux系统通过cgroup可以设置进程使用CPU，内存和IO资源的限额。
+	
+	namespace管理着host中全局唯一的资源，namespace实现了容器间资源的隔离。
+		mount namespace  让容器看上去拥有整个文件系统
+		UTS namespace让容器有自己的hostname。默认情况下hostname是它的短ID，可以通过-h或---hostname参数设置
+		IPC namespace  让容器有自己的共享内存和信号量来实现进程间的通信
+		PID namespace  容器在host中以进程的形式运行
+		Network namespace  让容器拥有自己独立的网卡、IP、路由等资源
+		User namespace   让容器能够管理自己的用户，host不能看到容器中创建的用户
+11.docker安装时会创建一个命名为docker0的linux bridge。如果不指定--network ，创建的容器默认都会挂到docekr0上。
+		docker network inspect bridge  查看使用的dcoker网络信息
+	1.自己可以手动创建桥接的网卡，同时指定网卡的子网地址（subnet）和网关（gateway）
+	docker network create --driver bridge --subnet 172.22.16.0/24  --gateway 172.22.16.1  lc2_net
+	
+	2.使用创建的网卡需要创建容器时手动指定（--network=），并可以指定ip（--ip）
+	docker run -it -d --network=lc2_net --ip 172.22.16.9 nginx
+	注： 
+		指定ip只能对使用--subnet参数的网卡使用。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			
