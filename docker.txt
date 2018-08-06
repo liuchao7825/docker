@@ -100,11 +100,66 @@
 	docker run -it -d --network=lc2_net --ip 172.22.16.9 nginx
 	注： 
 		指定ip只能对使用--subnet参数的网卡使用。
-
-
-
-
-
+12.容器之间的连通性
+	1.两个容器连在同一张网卡上，可以互通
+	2.连在不同网卡上，不可以互通（即使添加路由ip -r，开启路由转发也不可以 ）
+	原因：	查看防火墙，iptbles-save >a ,cat a,发现防火墙有类似规则
+			-A DOCKER-ISOLATION -i 网卡id -o  docekr0  -j  DROP
+			-A DOCKER-ISOLATION -i docker0 -o  网卡id  -j  DROP
+		防火墙  DROP掉了网桥docker0和其他网卡之间的双向流量
+	解决方法：1.清除防火墙规则，保存，
+			  2.给容器1添加一块容器2的网卡，使用 docker network connect  容器2网卡id  容器1id
+13.容器间通信的三种方式	
+		IP  ， docker  dns server ， joined 
+	1.IP，即使用网卡桥接，如上节所示
+	2.docker DNS Server
+		在启动时用--name 为容器命名，即可
+			限制：只能在user-defind网络中使用，不能在默认的bridge网络中使用
+	3.jioned容器
+		可以使两个或多个容器共享一个网络栈，共享网卡和配置信息，joinde容器之间可以通过127.0.0.1直接通信
+		docker run -d -it --name=web1 httpd
+		docker run -it --network=container:web1 busybox  （wget  127.0.0.1）
+		两个容器之间可以互相通信，使用同一张网卡和ip
+		
+14。容器访问外部网络。
+	容器本身使用docker0，访问外部网络时，通过net进行MASQUERADE伪装，将源ip变为本机ip，进行外网访问。
+15.Docker的两类存储资源		
+	1.storage driver 管理的镜像层和容器层
+	2.Data volume
+		Docker支持多种storage driver，有AUFS、ZFS、VFS、Overlay FS。但是没有那个driver能够适应所有的场景，driver本身在快组发展和迭代。
+			优先使用Linux发行版默认的storage driver。默认driver具有良好的稳定性，因为默认driver在发新版上经过了严格的测试。
+		（执行注入wget，ping之类的命令，不需要保存数据供以后使用，使用我直接退出，容器删除时存放在容器曾中的工作数据也一起被删除，但如果有持久化数据的徐爱u，穷奇启动时需要加载已有的数据，穷奇销毁时希望保留产生的新数据，需要用到另一种储存机制：data volume）	
+	
+	Data Volume本质时dockerHost 文件系统中的目录或文件，能够直接被mount到容器的文件系统中，具有以下特点
+		1.datavolume是目录或文件，并非没有格式话的磁盘（块设备）
+		2.容器可以读写volume中的数据
+		3.volume数据可以永久的保存，即使使用它的容器已经销毁。
+		（volume实际上是docker host文件系统的一部风，所以volume的容器里取决于文件系统当前未使用的空间，目前还没有方法设置volume的容量）
+	docker提供了两种类型的volume：bind mount和docker managed volume。
+		1.bind mount是将host上已存在的目录或文件mount到容器。使用-v <host path>:<container path>:权限  的格式。
+			bind mount 需要指定host文件系统的特定路今后，限制了容器的可以执行，当需要将容器迁移到其他host，而该host没有要mount的数据或者数据不再相同的路径时，操作会失败
+		2.docker managed volume不需要指定mount源，知名mount point就行了。查看挂载目录时需要通过docker inspect命令，会在容器的/var/lib/docker/volumes下生成一个随机目录作为mount源	
+16.容器与host共享数据
+	我们有两种类型的data volume，都可以用实现容器与host之间共享数据。
+	对于bind mount：直接将要共享的目录mount到容器
+	对于docker managed volume ，需要将共享数据copy到volume中。
+		docker run -d -p 80:80 -v /usr/local/apache/htdocs httpd
+		2f7a9ed***************
+		docker cp  ~/htdocs/index.html  2f7a***** =:/usr/loal/apache2/htdocs 
+	
+	容器之间共享数据
+		1.将主机上的目录通过bind mount的方式挂载进容器
+		2.volune container 专门为其他容器提供volume的容器。它提供的卷可以时bind mount，也可以是docker managed volume。
+17.data-packed volume container
+	将数据打包到镜像中，然后通过docker mamaged volume共享。
+	1.备份 定期备份 本地registry 的/myregistry目录，所有镜像都存在这个目录中
+	2.恢复 从备份目录里copy到/myregistry中
+	3.迁移 1.docker stop  当前registry容器
+		   2.启动新版本容器并mount原有volume
+			docker run -d -p 5000:5000 -v /myregistry:/var/lib/registry  registry:last
+	4.删除 docker rm 删除容器时带上-v参数，docker会将容器使用到的volume一并删除，但前提时没有其他容器mount该volume，目的时保护数据。
+	如果没有带-v，就会产生孤儿volume，使用docker volume ls查看ID，使用docker volume rm ID删除。（批量时可以执行  docker volume rm$(docker volume ls -q)  ）
+	
 
 
 
